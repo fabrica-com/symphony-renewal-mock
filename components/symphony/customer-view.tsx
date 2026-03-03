@@ -4,6 +4,8 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import type { Customer } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { CustomerIntake } from "@/components/symphony/customer-intake"
 import {
   Users,
   Phone,
@@ -14,6 +16,7 @@ import {
   Calendar,
   Sparkles,
   MessageSquare,
+  Plus,
 } from "lucide-react"
 
 const statusStyles: Record<string, { className: string }> = {
@@ -38,19 +41,40 @@ function daysAgo(dateStr: string) {
 
 export function CustomerView({ customers }: { customers: Customer[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [showIntake, setShowIntake] = useState(false)
   const active = customers.filter((c) => c.status === "active" || c.status === "negotiating").length
   const dormant = customers.filter((c) => c.status === "dormant").length
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Customer Intake Panel */}
+      {showIntake && (
+        <CustomerIntake
+          onClose={() => setShowIntake(false)}
+          onComplete={() => setShowIntake(false)}
+        />
+      )}
+
       {/* Summary */}
-      <div className="flex items-center gap-6 px-1">
-        <h2 className="text-sm font-semibold text-foreground">顧客一覧</h2>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <span>アクティブ: <span className="font-medium text-success">{active}</span></span>
-          <span>休眠: <span className="font-medium text-destructive">{dormant}</span></span>
-          <span>合計: <span className="font-medium text-foreground">{customers.length}</span></span>
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-6">
+          <h2 className="text-sm font-semibold text-foreground">顧客一覧</h2>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span>アクティブ: <span className="font-medium text-success">{active}</span></span>
+            <span>休眠: <span className="font-medium text-destructive">{dormant}</span></span>
+            <span>合計: <span className="font-medium text-foreground">{customers.length}</span></span>
+          </div>
         </div>
+        {!showIntake && (
+          <Button
+            size="sm"
+            onClick={() => setShowIntake(true)}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            顧客データ取込
+          </Button>
+        )}
       </div>
 
       {/* AI summary */}
@@ -227,10 +251,11 @@ export function CustomerView({ customers }: { customers: Customer[] }) {
       <div className="flex items-center gap-2 rounded-lg border border-dashed border-border px-4 py-3">
         <MessageSquare className="h-4 w-4 text-muted-foreground" />
         <p className="text-xs text-muted-foreground">
-          {"顧客の追加は Symphony AI チャットから行えます。例: "}
+          {"顧客の追加は上の「顧客データ取込」ボタンから。"}
           <span className="font-medium text-foreground">
-            {'"新規顧客: 山本様、SUV希望、予算300万円、090-xxxx-xxxx"'}
+            {"名刺・接客メモ・LINEスクショなどの生素材をAIが構造化"}
           </span>
+          {"し、あなたが確認・修正して登録します。"}
         </p>
       </div>
     </div>

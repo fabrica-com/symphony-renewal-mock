@@ -12,6 +12,7 @@ interface ChatMessage {
   content: string
   timestamp: Date
   cards?: ChatCard[]
+  navigateTo?: ViewMode
 }
 
 interface ChatCard {
@@ -26,71 +27,54 @@ const initialMessages: ChatMessage[] = [
     id: "sys-1",
     role: "assistant",
     content:
-      "おはようございます。本日の状況をお伝えします。\n\n5つのエージェントが稼働中です。承認キューに5件の依頼があります。\n\nUSS東京で BMW 320i M Sport のオークションが45分後に開始されます。3名の顧客希望と合致しており、入札承認をお待ちしています。",
+      "おはようございます。本日の状況をお伝えします。\n\n5つのエージェントが稼働中です。承認キューに5件の依頼があります。\n\nUSS東京で BMW 320i M Sport のオークションが45分後に開始されます。3名の顧客希望と合致しており、入札承認をお待ちしています。\n\n車両・顧客の新規登録は各タブの「データ取込」ボタンから生素材（写真・書類・音声）を投入してください。AIが構造化し、確認を求めます。",
     timestamp: new Date("2026-03-03T09:00:00Z"),
   },
 ]
 
 const quickActions = [
-  { label: "車両を登録", icon: Car },
-  { label: "顧客を追加", icon: Users },
+  { label: "車両を取込", icon: Car, navigateTo: "inventory" as ViewMode },
+  { label: "顧客を取込", icon: Users, navigateTo: "customers" as ViewMode },
   { label: "在庫状況", icon: Package },
   { label: "本日のレポート", icon: FileText },
 ]
 
 // Simulated responses for different input patterns
-function getSimulatedResponse(message: string): { content: string; cards?: ChatCard[] } {
+function getSimulatedResponse(message: string): { content: string; cards?: ChatCard[]; navigateTo?: ViewMode } {
   // Vehicle registration patterns
   if (
-    message.includes("車両") && (message.includes("登録") || message.includes("追加") || message.includes("仕入")) ||
+    message.includes("車両") && (message.includes("登録") || message.includes("追加") || message.includes("仕入") || message.includes("取込")) ||
     message.includes("プリウス") || message.includes("クラウン") || message.includes("USS") || message.includes("HAA")
   ) {
     return {
       content:
-        "車両情報を解析しました。以下の内容で仕入エージェントと価格算定エージェントに引き渡します。内容をご確認ください。",
-      cards: [
-        {
-          type: "vehicle-draft",
-          title: "車両登録ドラフト",
-          fields: [
-            { label: "車種", value: "トヨタ プリウス 2023年式" },
-            { label: "走行距離", value: "12,000 km" },
-            { label: "グレード", value: "4.5（推定）" },
-            { label: "仕入元", value: "USS東京" },
-            { label: "推定仕入価格", value: "248万円（市場分析に基づく）" },
-            { label: "推定販売価格", value: "298万円（利益率20%目標）" },
-            { label: "マッチング顧客", value: "2名の候補あり" },
-          ],
-          status: "draft",
-        },
-      ],
+        "車両登録ですね。中古車は一物一価ですので、まず生の素材が必要です。\n\n" +
+        "在庫一覧タブの「車両データ取込」ボタンから、以下の素材を投入してください:\n\n" +
+        "- 車両写真（外装・内装・メーター・傷）\n" +
+        "- 車検証（写真 or スキャン）\n" +
+        "- オークション査定票（あれば）\n" +
+        "- 口頭メモ（音声録音OK）\n\n" +
+        "これらの素材からAIが車台番号・年式・走行距離・外装状態・市場相場を自動抽出し、あなたに確認を求めます。\n" +
+        "素材が多いほど精度が上がります。",
+      navigateTo: "inventory" as ViewMode,
     }
   }
 
   // Customer registration patterns
   if (
-    message.includes("顧客") && (message.includes("登録") || message.includes("追加") || message.includes("新規")) ||
+    message.includes("顧客") && (message.includes("登録") || message.includes("追加") || message.includes("新規") || message.includes("取込")) ||
     message.includes("様") && (message.includes("希望") || message.includes("予算"))
   ) {
     return {
       content:
-        "顧客情報を解析しました。以下の内容で顧客マッチングエージェントに引き渡します。登録と同時に在庫との自動マッチングを開始します。",
-      cards: [
-        {
-          type: "customer-draft",
-          title: "顧客登録ドラフト",
-          fields: [
-            { label: "お名前", value: "山本 太郎 様" },
-            { label: "希望車種", value: "SUV（メーカー不問）" },
-            { label: "予算", value: "250万〜350万円" },
-            { label: "希望色", value: "ホワイト / ブラック" },
-            { label: "連絡先", value: "090-xxxx-xxxx" },
-            { label: "流入元", value: "来店（AIが自動判定）" },
-            { label: "即時マッチング", value: "マツダ CX-5（適合率 89%）" },
-          ],
-          status: "draft",
-        },
-      ],
+        "顧客登録ですね。お客様の情報を正確に取り込むため、顧客一覧タブの「顧客データ取込」をご利用ください。\n\n" +
+        "以下の素材からAIが名前・連絡先・希望条件を自動抽出します:\n\n" +
+        "- 名刺（写真 or スキャン）\n" +
+        "- 接客時の音声メモ\n" +
+        "- LINE / メールのスクリーンショット\n" +
+        "- 電話後のテキストメモ\n\n" +
+        "抽出結果はすべて確度表示付きで、低確度の項目は次回接客時にお客様へ確認するようリマインドします。",
+      navigateTo: "customers" as ViewMode,
     }
   }
 
@@ -144,7 +128,13 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
     }
   }, [messages, isTyping])
 
-  const handleSend = (text?: string) => {
+  const handleSend = (text?: string, navigateDirectly?: ViewMode) => {
+    // If it's a quick action with direct navigation, navigate immediately
+    if (navigateDirectly) {
+      onNavigate?.(navigateDirectly)
+      return
+    }
+
     const message = text || input.trim()
     if (!message) return
 
@@ -166,6 +156,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
         content: response.content,
         timestamp: new Date(),
         cards: response.cards,
+        navigateTo: response.navigateTo,
       }
       setMessages((prev) => [...prev, botMsg])
       setIsTyping(false)
@@ -256,6 +247,19 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
                 </div>
               </div>
 
+              {/* Navigate action */}
+              {msg.navigateTo && (
+                <div className="ml-9 mr-4">
+                  <button
+                    onClick={() => onNavigate?.(msg.navigateTo!)}
+                    className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    {msg.navigateTo === "inventory" ? "在庫一覧タブへ移動" : "顧客一覧タブへ移動"}
+                  </button>
+                </div>
+              )}
+
               {/* Structured cards */}
               {msg.cards?.map((card, idx) => (
                 <div key={idx} className="ml-9 mr-4">
@@ -337,7 +341,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
         {quickActions.map((action) => (
           <button
             key={action.label}
-            onClick={() => handleSend(action.label)}
+            onClick={() => handleSend(action.label, action.navigateTo)}
             className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
           >
             <action.icon className="h-3 w-3" />
@@ -369,7 +373,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
             className="h-10 w-10 rounded-lg bg-primary p-0 text-primary-foreground hover:bg-primary/90"
           >
             <Send className="h-4 w-4" />
-            <span className="sr-only">送信</span>
+            <span className="sr-only">送���</span>
           </Button>
         </form>
       </div>

@@ -1,8 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import type { Vehicle } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { VehicleIntake } from "@/components/symphony/vehicle-intake"
 import {
   Car,
   Eye,
@@ -12,6 +15,7 @@ import {
   Sparkles,
   AlertTriangle,
   ArrowUpRight,
+  Plus,
 } from "lucide-react"
 
 const statusStyles: Record<string, { className: string; label: string }> = {
@@ -49,20 +53,41 @@ function getAiInsight(vehicle: Vehicle): { type: "warning" | "opportunity" | "in
 }
 
 export function InventoryView({ vehicles }: { vehicles: Vehicle[] }) {
+  const [showIntake, setShowIntake] = useState(false)
   const listed = vehicles.filter((v) => v.status === "listed").length
   const inspecting = vehicles.filter((v) => v.status === "in-inspection").length
   const pending = vehicles.filter((v) => v.status === "pending-purchase").length
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Vehicle Intake Panel */}
+      {showIntake && (
+        <VehicleIntake
+          onClose={() => setShowIntake(false)}
+          onComplete={() => setShowIntake(false)}
+        />
+      )}
+
       {/* Summary strip */}
-      <div className="flex items-center gap-6 px-1">
-        <h2 className="text-sm font-semibold text-foreground">在庫一覧</h2>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <span>出品中: <span className="font-medium text-success">{listed}</span></span>
-          <span>検査中: <span className="font-medium text-warning">{inspecting}</span></span>
-          <span>仕入待ち: <span className="font-medium text-primary">{pending}</span></span>
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-6">
+          <h2 className="text-sm font-semibold text-foreground">在庫一覧</h2>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span>出品中: <span className="font-medium text-success">{listed}</span></span>
+            <span>検査中: <span className="font-medium text-warning">{inspecting}</span></span>
+            <span>仕入待ち: <span className="font-medium text-primary">{pending}</span></span>
+          </div>
         </div>
+        {!showIntake && (
+          <Button
+            size="sm"
+            onClick={() => setShowIntake(true)}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            車両データ取込
+          </Button>
+        )}
       </div>
 
       {/* AI summary banner */}
@@ -221,10 +246,11 @@ export function InventoryView({ vehicles }: { vehicles: Vehicle[] }) {
       <div className="flex items-center gap-2 rounded-lg border border-dashed border-border px-4 py-3">
         <Car className="h-4 w-4 text-muted-foreground" />
         <p className="text-xs text-muted-foreground">
-          {"車両の追加は Symphony AI チャットから行えます。例: "}
+          {"車両の追加は上の「車両データ取込」ボタンから。写真・車検証・査定票・音声メモなど"}
           <span className="font-medium text-foreground">
-            {'"USS東京で2023年式プリウス、走行1.2万km、グレード4.5を仕入検討して"'}
+            {"生の素材をAIが構造化"}
           </span>
+          {"し、あなたが確認・修正して登録します。"}
         </p>
       </div>
     </div>
