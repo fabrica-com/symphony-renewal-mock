@@ -2,14 +2,23 @@
 
 import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { Send, Bot, User, Sparkles } from "lucide-react"
+import { Send, Bot, User, Sparkles, Car, Users, Package, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import type { ViewMode } from "@/lib/types"
 
 interface ChatMessage {
   id: string
   role: "user" | "assistant"
   content: string
   timestamp: Date
+  cards?: ChatCard[]
+}
+
+interface ChatCard {
+  type: "vehicle-draft" | "customer-draft" | "action-result"
+  title: string
+  fields: { label: string; value: string }[]
+  status: "draft" | "confirmed" | "processing"
 }
 
 const initialMessages: ChatMessage[] = [
@@ -17,19 +26,112 @@ const initialMessages: ChatMessage[] = [
     id: "sys-1",
     role: "assistant",
     content:
-      "おはようございます。本日の状況をお伝えします。\n\n5つのエージェントが稼働中です。承認キューに5件の依頼があります。\n\n特に注目すべきは、USS東京で BMW 320i M Sport のオークションが45分後に開始されます。3名の顧客希望と合致しており、入札承認をお待ちしています。\n\nまた、メルセデス C200 の値下げ提案もご確認ください。21日間問い合わせゼロのため、早期対応が推奨されます。",
+      "おはようございます。本日の状況をお伝えします。\n\n5つのエージェントが稼働中です。承認キューに5件の依頼があります。\n\nUSS東京で BMW 320i M Sport のオークションが45分後に開始されます。3名の顧客希望と合致しており、入札承認をお待ちしています。",
     timestamp: new Date("2026-03-03T09:00:00Z"),
   },
 ]
 
 const quickActions = [
-  "今日の売上見込みは？",
-  "在庫で動きが悪い車両は？",
-  "今週のオークション予定",
-  "全エージェントのステータス",
+  { label: "車両を登録", icon: Car },
+  { label: "顧客を追加", icon: Users },
+  { label: "在庫状況", icon: Package },
+  { label: "本日のレポート", icon: FileText },
 ]
 
-export function CommandChat() {
+// Simulated responses for different input patterns
+function getSimulatedResponse(message: string): { content: string; cards?: ChatCard[] } {
+  // Vehicle registration patterns
+  if (
+    message.includes("車両") && (message.includes("登録") || message.includes("追加") || message.includes("仕入")) ||
+    message.includes("プリウス") || message.includes("クラウン") || message.includes("USS") || message.includes("HAA")
+  ) {
+    return {
+      content:
+        "車両情報を解析しました。以下の内容で仕入エージェントと価格算定エージェントに引き渡します。内容をご確認ください。",
+      cards: [
+        {
+          type: "vehicle-draft",
+          title: "車両登録ドラフト",
+          fields: [
+            { label: "車種", value: "トヨタ プリウス 2023年式" },
+            { label: "走行距離", value: "12,000 km" },
+            { label: "グレード", value: "4.5（推定）" },
+            { label: "仕入元", value: "USS東京" },
+            { label: "推定仕入価格", value: "248万円（市場分析に基づく）" },
+            { label: "推定販売価格", value: "298万円（利益率20%目標）" },
+            { label: "マッチング顧客", value: "2名の候補あり" },
+          ],
+          status: "draft",
+        },
+      ],
+    }
+  }
+
+  // Customer registration patterns
+  if (
+    message.includes("顧客") && (message.includes("登録") || message.includes("追加") || message.includes("新規")) ||
+    message.includes("様") && (message.includes("希望") || message.includes("予算"))
+  ) {
+    return {
+      content:
+        "顧客情報を解析しました。以下の内容で顧客マッチングエージェントに引き渡します。登録と同時に在庫との自動マッチングを開始します。",
+      cards: [
+        {
+          type: "customer-draft",
+          title: "顧客登録ドラフト",
+          fields: [
+            { label: "お名前", value: "山本 太郎 様" },
+            { label: "希望車種", value: "SUV（メーカー不問）" },
+            { label: "予算", value: "250万〜350万円" },
+            { label: "希望色", value: "ホワイト / ブラック" },
+            { label: "連絡先", value: "090-xxxx-xxxx" },
+            { label: "流入元", value: "来店（AIが自動判定）" },
+            { label: "即時マッチング", value: "マツダ CX-5（適合率 89%）" },
+          ],
+          status: "draft",
+        },
+      ],
+    }
+  }
+
+  // Inventory status
+  if (message.includes("在庫") || message.includes("棚卸") || message.includes("状況")) {
+    return {
+      content:
+        "現在の在庫状況です。\n\n" +
+        "出品中: 5台（うち好調2台、要対策2台、通常1台）\n" +
+        "検査中: 2台（Honda Fit、Lexus NX 350h）\n" +
+        "仕入待ち: 1台（BMW 320i M Sport）\n\n" +
+        "注目ポイント:\n" +
+        "- アルファードは問い合わせ14件で過去最高ペース\n" +
+        "- C200とフォレスターは値下げまたは販路変更を検討中\n" +
+        "- NX 350hの検査が本日中に完了予定\n\n" +
+        "在庫一覧タブで詳細を確認できます。",
+    }
+  }
+
+  // Report
+  if (message.includes("レポート") || message.includes("売上") || message.includes("今日")) {
+    return {
+      content:
+        "本日の売上見込みは約580万円です。\n\n" +
+        "- 田中様（マツダ CX-5）: 成約確率 87% / 280万円\n" +
+        "- 佐藤様（トヨタ アルファード）: 成約確率 72% / 598万円\n\n" +
+        "エージェント稼働状況:\n" +
+        "- 本日の処理タスク: 158件\n" +
+        "- トークン消費: 707K / 2,150K（33%）\n" +
+        "- 自動処理率: 94.2%（前月比 +2.1%）\n\n" +
+        "全エージェントが正常稼働中です。",
+    }
+  }
+
+  // Default
+  return {
+    content: `了解しました。「${message}」について関連エージェントに指示を出しました。\n\n処理結果は承認キューまたはアクティビティフィードに表示されます。\n\n何か他にありますか？`,
+  }
+}
+
+export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
@@ -56,32 +158,48 @@ export function CommandChat() {
     setInput("")
     setIsTyping(true)
 
-    // Simulate AI response
     setTimeout(() => {
-      const responses: Record<string, string> = {
-        "今日の売上見込みは？":
-          "本日の売上見込みは約580万円です。\n\n- 田中様（マツダ CX-5）: 成約確率 87% → 280万円\n- 佐藤様（トヨタ RAV4）: 成約確率 72% → 298万円\n\n顧客マッチングエージェントが両案件をフォロー中です。田中様には本日午後にパーソナライズ提案を送信予定です。",
-        "在庫で動きが悪い車両は？":
-          "掲載14日以上で反応の薄い車両が3台あります。\n\n1. メルセデス C200（21日・問い合わせ0件）→ 値下げ承認を提出済み\n2. スバル フォレスター 2021（18日・問い合わせ1件）→ 価格算定エージェントが分析中\n3. 日産 ノート e-POWER（16日・問い合わせ2件）→ 写真の差し替えを検討中\n\nC200の値下げ承認を優先してご対応ください。",
-        "今週のオークション予定":
-          "今週のオークションスケジュール:\n\n本日 10:00 - USS東京（BMW 320i M Sport 入札承認済み待ち）\n明日 13:00 - HAA神戸（監視対象: 5台）\n3/5 09:00 - JU岐阜（監視対象: 3台）\n3/6 11:00 - USS名古屋（監視対象: 8台）\n\n仕入エージェントが全オークションを監視しています。予算枠の残りは今月あと1,200万円です。",
-        "全エージェントのステータス":
-          "各エージェントの状況:\n\n[稼働中] 価格算定エージェント - トヨタ クラウンの分析中（トークン: 28%使用）\n[稼働中] 顧客マッチングエージェント - 12件の照合中（トークン: 51%使用）\n[稼働中] 出品エージェント - 3台の写真・説明文生成中（トークン: 51%使用）\n[承認待ち] 車両検査エージェント - Honda Fitのレポート承認待ち（トークン: 30%使用）\n[待機中] 仕入エージェント - 次回スキャンまで14分（トークン: 16%使用）\n\n全体のトークン効率は94.2%で先月比+2.1%向上しています。",
-      }
-
-      const response =
-        responses[message] ||
-        `了解しました。「${message}」について調査します。\n\n関連するエージェントにタスクを振り分けました。数分以内に結果をお伝えします。\n\nなお、現在承認キューに5件の依頼がありますので、そちらもご確認ください。`
-
+      const response = getSimulatedResponse(message)
       const botMsg: ChatMessage = {
         id: `b-${Date.now()}`,
         role: "assistant",
-        content: response,
+        content: response.content,
         timestamp: new Date(),
+        cards: response.cards,
       }
       setMessages((prev) => [...prev, botMsg])
       setIsTyping(false)
     }, 1500)
+  }
+
+  const handleCardAction = (messageId: string, action: "confirm" | "edit") => {
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id !== messageId || !msg.cards) return msg
+        return {
+          ...msg,
+          cards: msg.cards.map((card) => ({
+            ...card,
+            status: action === "confirm" ? ("processing" as const) : ("draft" as const),
+          })),
+        }
+      })
+    )
+
+    if (action === "confirm") {
+      setIsTyping(true)
+      setTimeout(() => {
+        const botMsg: ChatMessage = {
+          id: `b-${Date.now()}`,
+          role: "assistant",
+          content:
+            "登録を受け付けました。各エージェントがバックグラウンドで処理を開始します。\n\n- 価格算定エージェント: 市場調査を開始\n- 仕入エージェント: オークション監視に追加\n- 顧客マッチングエージェント: マッチング候補を自動検索\n\n処理完了時に承認キューで結果をお伝えします。",
+          timestamp: new Date(),
+        }
+        setMessages((prev) => [...prev, botMsg])
+        setIsTyping(false)
+      }, 1000)
+    }
   }
 
   return (
@@ -99,45 +217,102 @@ export function CommandChat() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3">
         <div className="flex flex-col gap-4">
           {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={cn("flex gap-2.5", msg.role === "user" && "flex-row-reverse")}
-            >
-              <div
-                className={cn(
-                  "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full",
-                  msg.role === "assistant"
-                    ? "bg-primary/10 text-primary"
-                    : "bg-secondary text-foreground"
-                )}
-              >
-                {msg.role === "assistant" ? (
-                  <Bot className="h-3.5 w-3.5" />
-                ) : (
-                  <User className="h-3.5 w-3.5" />
-                )}
-              </div>
-              <div
-                className={cn(
-                  "max-w-[85%] rounded-xl px-3.5 py-2.5",
-                  msg.role === "assistant"
-                    ? "bg-secondary text-foreground"
-                    : "bg-primary text-primary-foreground"
-                )}
-              >
-                <p className="whitespace-pre-line text-xs leading-relaxed">{msg.content}</p>
-                <p
+            <div key={msg.id} className="flex flex-col gap-2">
+              <div className={cn("flex gap-2.5", msg.role === "user" && "flex-row-reverse")}>
+                <div
                   className={cn(
-                    "mt-1.5 text-[10px]",
-                    msg.role === "assistant" ? "text-muted-foreground" : "text-primary-foreground/60"
+                    "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full",
+                    msg.role === "assistant"
+                      ? "bg-primary/10 text-primary"
+                      : "bg-secondary text-foreground"
                   )}
                 >
-                  {msg.timestamp.toLocaleTimeString("ja-JP", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+                  {msg.role === "assistant" ? (
+                    <Bot className="h-3.5 w-3.5" />
+                  ) : (
+                    <User className="h-3.5 w-3.5" />
+                  )}
+                </div>
+                <div
+                  className={cn(
+                    "max-w-[85%] rounded-xl px-3.5 py-2.5",
+                    msg.role === "assistant"
+                      ? "bg-secondary text-foreground"
+                      : "bg-primary text-primary-foreground"
+                  )}
+                >
+                  <p className="whitespace-pre-line text-xs leading-relaxed">{msg.content}</p>
+                  <p
+                    className={cn(
+                      "mt-1.5 text-[10px]",
+                      msg.role === "assistant" ? "text-muted-foreground" : "text-primary-foreground/60"
+                    )}
+                  >
+                    {msg.timestamp.toLocaleTimeString("ja-JP", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
               </div>
+
+              {/* Structured cards */}
+              {msg.cards?.map((card, idx) => (
+                <div key={idx} className="ml-9 mr-4">
+                  <div
+                    className={cn(
+                      "overflow-hidden rounded-lg border",
+                      card.status === "processing"
+                        ? "border-success/30 bg-success/5"
+                        : "border-primary/30 bg-card"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+                      {card.type === "vehicle-draft" ? (
+                        <Car className="h-3.5 w-3.5 text-primary" />
+                      ) : (
+                        <Users className="h-3.5 w-3.5 text-primary" />
+                      )}
+                      <span className="text-xs font-medium text-foreground">{card.title}</span>
+                      {card.status === "processing" && (
+                        <span className="ml-auto rounded-full bg-success/20 px-2 py-0.5 text-[10px] text-success">
+                          処理中
+                        </span>
+                      )}
+                    </div>
+                    <div className="px-3 py-2">
+                      {card.fields.map((field, fIdx) => (
+                        <div
+                          key={fIdx}
+                          className={cn(
+                            "flex items-baseline justify-between py-1.5",
+                            fIdx < card.fields.length - 1 && "border-b border-border/50"
+                          )}
+                        >
+                          <span className="text-[10px] text-muted-foreground">{field.label}</span>
+                          <span className="text-xs font-medium text-foreground">{field.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {card.status === "draft" && (
+                      <div className="flex gap-2 border-t border-border px-3 py-2">
+                        <button
+                          onClick={() => handleCardAction(msg.id, "confirm")}
+                          className="flex-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                        >
+                          この内容で登録
+                        </button>
+                        <button
+                          onClick={() => handleCardAction(msg.id, "edit")}
+                          className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        >
+                          修正する
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
           {isTyping && (
@@ -161,11 +336,12 @@ export function CommandChat() {
       <div className="flex gap-1.5 overflow-x-auto px-4 pb-2">
         {quickActions.map((action) => (
           <button
-            key={action}
-            onClick={() => handleSend(action)}
-            className="flex-shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+            key={action.label}
+            onClick={() => handleSend(action.label)}
+            className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
           >
-            {action}
+            <action.icon className="h-3 w-3" />
+            {action.label}
           </button>
         ))}
       </div>
@@ -183,7 +359,7 @@ export function CommandChat() {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="質問や指示を入力..."
+            placeholder="車両登録、顧客追加、質問など何でも..."
             className="flex-1 rounded-lg border border-border bg-secondary px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
           />
           <Button

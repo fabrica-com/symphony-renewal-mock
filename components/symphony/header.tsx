@@ -1,13 +1,29 @@
 "use client"
 
-import { Bell, Settings, Activity } from "lucide-react"
+import { Bell, Settings, Activity, LayoutDashboard, Car, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import type { ViewMode } from "@/lib/types"
 
-export function Header({ pendingCount }: { pendingCount: number }) {
+export function Header({
+  pendingCount,
+  currentView,
+  onViewChange,
+}: {
+  pendingCount: number
+  currentView: ViewMode
+  onViewChange: (view: ViewMode) => void
+}) {
+  const navItems: { view: ViewMode; label: string; icon: React.ReactNode }[] = [
+    { view: "command", label: "コマンドセンター", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
+    { view: "inventory", label: "在庫一覧", icon: <Car className="h-3.5 w-3.5" /> },
+    { view: "customers", label: "顧客一覧", icon: <Users className="h-3.5 w-3.5" /> },
+  ]
+
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border bg-card px-6">
-      <div className="flex items-center gap-3">
+    <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
+      <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Activity className="h-4 w-4 text-primary-foreground" />
@@ -16,10 +32,29 @@ export function Header({ pendingCount }: { pendingCount: number }) {
             <h1 className="text-base font-bold tracking-tight text-foreground">Symphony</h1>
           </div>
         </div>
-        <div className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
+        <div className="hidden items-center gap-1 text-xs text-muted-foreground md:flex">
           <span className="h-1.5 w-1.5 rounded-full bg-success" />
           全システム正常稼働
         </div>
+
+        {/* Navigation */}
+        <nav className="ml-2 hidden items-center gap-0.5 lg:flex">
+          {navItems.map((item) => (
+            <button
+              key={item.view}
+              onClick={() => onViewChange(item.view)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                currentView === item.view
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              )}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </nav>
       </div>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" className="relative h-9 w-9 p-0 text-muted-foreground hover:text-foreground">

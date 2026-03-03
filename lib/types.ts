@@ -59,6 +59,40 @@ export interface Vehicle {
   grade: string
   color: string
   colorJa: string
+  daysListed?: number
+  inquiries?: number
+  views?: number
+  source?: string
+  vin?: string
+}
+
+export interface Customer {
+  id: string
+  name: string
+  nameKana: string
+  phone: string
+  email: string
+  preferences: CustomerPreference
+  matchedVehicles: string[]
+  matchScore: number
+  status: "active" | "contacted" | "negotiating" | "closed" | "dormant"
+  statusJa: string
+  lastContact: string
+  source: string
+  sourceJa: string
+  notes: string
+  registeredAt: string
+  budget: { min: number; max: number }
+}
+
+export interface CustomerPreference {
+  bodyTypes: string[]
+  makes: string[]
+  yearMin?: number
+  yearMax?: number
+  mileageMax?: number
+  colors: string[]
+  features: string[]
 }
 
 export interface KPI {
@@ -68,3 +102,5 @@ export interface KPI {
   change: number
   trend: "up" | "down" | "flat"
 }
+
+export type ViewMode = "command" | "inventory" | "customers"
