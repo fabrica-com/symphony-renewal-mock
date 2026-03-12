@@ -130,4 +130,36 @@ export interface KPI {
   trend: "up" | "down" | "flat"
 }
 
-export type ViewMode = "command" | "inventory" | "customers"
+export type ViewMode = "command" | "inventory" | "customers" | "calendar"
+
+// Calendar event types for Google Calendar integration
+export type CalendarEventType = 
+  | "delivery"     // 納車
+  | "negotiation"  // 商談
+  | "auction"      // オークション
+  | "inspection"   // 検査・入庫
+  | "loaner"       // 代車・レンタカー
+  | "follow-up"    // フォローアップ
+  | "shaken"       // 車検
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  type: CalendarEventType
+  typeJa: string
+  date: string        // ISO date string YYYY-MM-DD
+  startTime: string   // HH:MM format
+  endTime: string     // HH:MM format
+  location?: string
+  customerId?: string
+  customerName?: string
+  vehicleId?: string
+  vehicleName?: string
+  agentId?: string
+  agentName?: string
+  status: "scheduled" | "confirmed" | "completed" | "cancelled"
+  statusJa: string
+  notes?: string
+  googleCalendarId?: string  // For sync with Google Calendar
+  color?: string  // Event color for calendar display
+}

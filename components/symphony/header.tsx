@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Settings, Activity, LayoutDashboard, Car, Users } from "lucide-react"
+import { Bell, Settings, Activity, LayoutDashboard, Car, Users, Calendar } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -19,6 +19,7 @@ export function Header({
     { view: "command", label: "コマンドセンター", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
     { view: "inventory", label: "在庫一覧", icon: <Car className="h-3.5 w-3.5" /> },
     { view: "customers", label: "顧客一覧", icon: <Users className="h-3.5 w-3.5" /> },
+    { view: "calendar", label: "スケジュール", icon: <Calendar className="h-3.5 w-3.5" /> },
   ]
 
   return (

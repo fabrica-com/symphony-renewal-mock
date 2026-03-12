@@ -10,6 +10,7 @@ import { CommandChat } from "@/components/symphony/command-chat"
 import { VehicleCards } from "@/components/symphony/vehicle-cards"
 import { InventoryView } from "@/components/symphony/inventory-view"
 import { CustomerView } from "@/components/symphony/customer-view"
+import { CalendarView } from "@/components/symphony/calendar-view"
 import {
   agents as initialAgents,
   approvalQueue as initialApprovals,
@@ -17,6 +18,7 @@ import {
   vehicles,
   customers,
   kpis,
+  calendarEvents,
 } from "@/lib/mock-data"
 import type { ApprovalItem, ViewMode } from "@/lib/types"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -33,6 +35,7 @@ import {
   Car,
   Users,
   LayoutDashboard,
+  Calendar,
 } from "lucide-react"
 
 export default function SymphonyDashboard() {
@@ -229,6 +232,36 @@ export default function SymphonyDashboard() {
               </div>
             </>
           )}
+
+          {/* =================================== */}
+          {/* CALENDAR VIEW                       */}
+          {/* =================================== */}
+          {currentView === "calendar" && (
+            <>
+              {/* Mobile */}
+              <div className="flex flex-1 overflow-auto lg:hidden">
+                <div className="p-4">
+                  <CalendarView events={calendarEvents} />
+                </div>
+              </div>
+              {/* Desktop - Resizable layout */}
+              <div className="hidden flex-1 overflow-hidden lg:flex">
+                <ResizablePanelGroup direction="horizontal" className="h-full">
+                  <ResizablePanel defaultSize={70} minSize={50}>
+                    <ScrollArea className="h-full">
+                      <div className="p-4 lg:p-6">
+                        <CalendarView events={calendarEvents} />
+                      </div>
+                    </ScrollArea>
+                  </ResizablePanel>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize={30} minSize={20} maxSize={45}>
+                    <CommandChat onNavigate={setCurrentView} />
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              </div>
+            </>
+          )}
         </main>
       </div>
 
@@ -259,6 +292,15 @@ export default function SymphonyDashboard() {
           >
             <Users className="h-4 w-4" />
             <span className="text-[10px]">顧客</span>
+          </button>
+          <button
+            onClick={() => setCurrentView("calendar")}
+            className={`flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors ${
+              currentView === "calendar" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Calendar className="h-4 w-4" />
+            <span className="text-[10px]">予定</span>
           </button>
         </div>
       )}
