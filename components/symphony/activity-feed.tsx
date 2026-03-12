@@ -31,13 +31,15 @@ const statusConfig: Record<
   },
 }
 
-// Extract hours and minutes from ISO string to avoid timezone issues
+// Extract hours and minutes directly from ISO string to avoid hydration mismatch
+// ISO format: "2026-03-03T09:18:00Z" - extract "09:18" directly
 function formatTimeFromISO(dateStr: string) {
-  // Parse the ISO string and extract time parts to avoid hydration mismatch
-  const d = new Date(dateStr)
-  const hours = d.getUTCHours().toString().padStart(2, "0")
-  const minutes = d.getUTCMinutes().toString().padStart(2, "0")
-  return `${hours}:${minutes}`
+  // Parse directly from ISO string without Date object to avoid timezone issues
+  const match = dateStr.match(/T(\d{2}):(\d{2})/)
+  if (match) {
+    return `${match[1]}:${match[2]}`
+  }
+  return "--:--"
 }
 
 export function ActivityFeed({ events }: { events: ActivityEvent[] }) {
