@@ -22,6 +22,11 @@ import type { ApprovalItem, ViewMode } from "@/lib/types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable"
+import {
   MessageSquare,
   CheckSquare,
   Radio,
@@ -59,21 +64,6 @@ export default function SymphonyDashboard() {
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Column - Agent Status (visible on command center) */}
-        {currentView === "command" && (
-          <aside className="hidden w-72 flex-shrink-0 border-r border-border lg:block">
-            <ScrollArea className="h-full">
-              <div className="p-4">
-                <AgentStatusPanel
-                  agents={initialAgents}
-                  selectedAgentId={selectedAgent}
-                  onSelectAgent={setSelectedAgent}
-                />
-              </div>
-            </ScrollArea>
-          </aside>
-        )}
-
         {/* Center Content - changes based on view */}
         <main className="flex flex-1 flex-col overflow-hidden lg:flex-row">
           {/* =================================== */}
@@ -129,34 +119,53 @@ export default function SymphonyDashboard() {
                 </Tabs>
               </div>
 
-              {/* Desktop Center */}
-              <div className="hidden flex-1 flex-col overflow-hidden lg:flex">
-                <div className="flex flex-1 overflow-hidden">
-                  {/* Approval + Activity column */}
-                  <div className="flex flex-1 flex-col overflow-hidden">
-                    <ScrollArea className="flex-1">
+              {/* Desktop - Resizable 3 column layout */}
+              <div className="hidden flex-1 overflow-hidden lg:flex">
+                <ResizablePanelGroup direction="horizontal" className="h-full">
+                  {/* Left Panel - Agent Status */}
+                  <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
+                    <ScrollArea className="h-full">
                       <div className="p-4">
-                        <ApprovalQueue items={approvals} onApprove={handleApprove} onReject={handleReject} />
-                        <div className="mt-6">
-                          <ActivityFeed events={activityFeed} />
-                        </div>
+                        <AgentStatusPanel
+                          agents={initialAgents}
+                          selectedAgentId={selectedAgent}
+                          onSelectAgent={setSelectedAgent}
+                        />
                       </div>
                     </ScrollArea>
-                    {/* Vehicle strip at bottom */}
-                    <div className="border-t border-border">
-                      <ScrollArea className="h-auto max-h-[280px]">
+                  </ResizablePanel>
+
+                  <ResizableHandle withHandle />
+
+                  {/* Center Panel - Approval + Activity */}
+                  <ResizablePanel defaultSize={50} minSize={30}>
+                    <div className="flex h-full flex-col overflow-hidden">
+                      <ScrollArea className="flex-1">
                         <div className="p-4">
-                          <VehicleCards vehicles={vehicles} />
+                          <ApprovalQueue items={approvals} onApprove={handleApprove} onReject={handleReject} />
+                          <div className="mt-6">
+                            <ActivityFeed events={activityFeed} />
+                          </div>
                         </div>
                       </ScrollArea>
+                      {/* Vehicle strip at bottom */}
+                      <div className="border-t border-border">
+                        <ScrollArea className="h-auto max-h-[280px]">
+                          <div className="p-4">
+                            <VehicleCards vehicles={vehicles} />
+                          </div>
+                        </ScrollArea>
+                      </div>
                     </div>
-                  </div>
+                  </ResizablePanel>
 
-                  {/* Chat column */}
-                  <div className="hidden w-[380px] flex-shrink-0 border-l border-border xl:flex xl:flex-col">
+                  <ResizableHandle withHandle />
+
+                  {/* Right Panel - Chat */}
+                  <ResizablePanel defaultSize={30} minSize={20} maxSize={45}>
                     <CommandChat onNavigate={setCurrentView} />
-                  </div>
-                </div>
+                  </ResizablePanel>
+                </ResizablePanelGroup>
               </div>
             </>
           )}
@@ -165,34 +174,60 @@ export default function SymphonyDashboard() {
           {/* INVENTORY VIEW                      */}
           {/* =================================== */}
           {currentView === "inventory" && (
-            <div className="flex flex-1 overflow-hidden">
-              <div className="flex-1 overflow-auto">
-                <div className="p-4 lg:p-6">
+            <>
+              {/* Mobile */}
+              <div className="flex flex-1 overflow-auto lg:hidden">
+                <div className="p-4">
                   <InventoryView vehicles={vehicles} />
                 </div>
               </div>
-              {/* Chat sidebar for inventory view */}
-              <div className="hidden w-[380px] flex-shrink-0 border-l border-border xl:flex xl:flex-col">
-                <CommandChat onNavigate={setCurrentView} />
+              {/* Desktop - Resizable layout */}
+              <div className="hidden flex-1 overflow-hidden lg:flex">
+                <ResizablePanelGroup direction="horizontal" className="h-full">
+                  <ResizablePanel defaultSize={70} minSize={50}>
+                    <ScrollArea className="h-full">
+                      <div className="p-4 lg:p-6">
+                        <InventoryView vehicles={vehicles} />
+                      </div>
+                    </ScrollArea>
+                  </ResizablePanel>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize={30} minSize={20} maxSize={45}>
+                    <CommandChat onNavigate={setCurrentView} />
+                  </ResizablePanel>
+                </ResizablePanelGroup>
               </div>
-            </div>
+            </>
           )}
 
           {/* =================================== */}
           {/* CUSTOMER VIEW                       */}
           {/* =================================== */}
           {currentView === "customers" && (
-            <div className="flex flex-1 overflow-hidden">
-              <div className="flex-1 overflow-auto">
-                <div className="p-4 lg:p-6">
+            <>
+              {/* Mobile */}
+              <div className="flex flex-1 overflow-auto lg:hidden">
+                <div className="p-4">
                   <CustomerView customers={customers} />
                 </div>
               </div>
-              {/* Chat sidebar for customer view */}
-              <div className="hidden w-[380px] flex-shrink-0 border-l border-border xl:flex xl:flex-col">
-                <CommandChat onNavigate={setCurrentView} />
+              {/* Desktop - Resizable layout */}
+              <div className="hidden flex-1 overflow-hidden lg:flex">
+                <ResizablePanelGroup direction="horizontal" className="h-full">
+                  <ResizablePanel defaultSize={70} minSize={50}>
+                    <ScrollArea className="h-full">
+                      <div className="p-4 lg:p-6">
+                        <CustomerView customers={customers} />
+                      </div>
+                    </ScrollArea>
+                  </ResizablePanel>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize={30} minSize={20} maxSize={45}>
+                    <CommandChat onNavigate={setCurrentView} />
+                  </ResizablePanel>
+                </ResizablePanelGroup>
               </div>
-            </div>
+            </>
           )}
         </main>
       </div>
