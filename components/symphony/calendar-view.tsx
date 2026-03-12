@@ -22,11 +22,13 @@ import {
 } from "lucide-react"
 
 const eventTypeConfig: Record<CalendarEventType, { label: string; color: string; icon: React.ReactNode }> = {
-  delivery: { label: "納車", color: "bg-success text-success-foreground", icon: <Car className="h-3 w-3" /> },
-  negotiation: { label: "商談", color: "bg-primary text-primary-foreground", icon: <Users className="h-3 w-3" /> },
-  auction: { label: "AA", color: "bg-warning text-warning-foreground", icon: <Gavel className="h-3 w-3" /> },
-  inspection: { label: "検査", color: "bg-chart-3 text-foreground", icon: <Search className="h-3 w-3" /> },
-  "follow-up": { label: "フォロー", color: "bg-chart-5 text-foreground", icon: <Phone className="h-3 w-3" /> },
+  delivery: { label: "納車", color: "bg-emerald-500 text-white", icon: <Car className="h-3 w-3" /> },
+  negotiation: { label: "商談", color: "bg-blue-500 text-white", icon: <Users className="h-3 w-3" /> },
+  auction: { label: "オークション", color: "bg-orange-500 text-white", icon: <Gavel className="h-3 w-3" /> },
+  inspection: { label: "入庫", color: "bg-cyan-500 text-white", icon: <Search className="h-3 w-3" /> },
+  loaner: { label: "代車", color: "bg-purple-500 text-white", icon: <Car className="h-3 w-3" /> },
+  shaken: { label: "車検", color: "bg-red-500 text-white", icon: <Search className="h-3 w-3" /> },
+  "follow-up": { label: "フォロー", color: "bg-pink-500 text-white", icon: <Phone className="h-3 w-3" /> },
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -101,6 +103,8 @@ export function CalendarView({ events }: { events: CalendarEvent[] }) {
       negotiation: 0,
       auction: 0,
       inspection: 0,
+      loaner: 0,
+      shaken: 0,
       "follow-up": 0,
     }
     weekDates.forEach((date) => {
