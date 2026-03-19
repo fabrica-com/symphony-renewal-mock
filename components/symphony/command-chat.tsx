@@ -15,13 +15,17 @@ interface ChatMessage {
   navigateTo?: ViewMode
 }
 
-// Format time from ISO string to avoid hydration mismatch
-function formatTime(isoString: string): string {
-  const match = isoString.match(/T(\d{2}):(\d{2})/)
-  if (match) {
-    return `${match[1]}:${match[2]}`
+// Format time from ISO string - uses local time for display
+function formatTime(isoString: string, mounted: boolean): string {
+  if (!mounted) return "" // Return empty on server to avoid mismatch
+  try {
+    const date = new Date(isoString)
+    const hours = date.getHours().toString().padStart(2, "0")
+    const minutes = date.getMinutes().toString().padStart(2, "0")
+    return `${hours}:${minutes}`
+  } catch {
+    return "--:--"
   }
-  return "--:--"
 }
 
 interface ChatCard {
@@ -148,13 +152,19 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-
+  
+  // Prevent hydration mismatch for time display
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
+    setMounted(true)
+  }, [])
+  
+  useEffect(() => {
+  if (scrollRef.current) {
+  scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }
   }, [messages, isTyping])
 
   const handleSend = (text?: string, navigateDirectly?: ViewMode) => {
@@ -267,8 +277,9 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
                       "mt-1.5 text-[10px]",
                       msg.role === "assistant" ? "text-muted-foreground" : "text-primary-foreground/60"
                     )}
+                    suppressHydrationWarning
                   >
-                    {formatTime(msg.timestamp)}
+                    {formatTime(msg.timestamp, mounted)}
                   </p>
                 </div>
               </div>
