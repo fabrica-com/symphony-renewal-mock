@@ -10,9 +10,18 @@ interface ChatMessage {
   id: string
   role: "user" | "assistant"
   content: string
-  timestamp: Date
+  timestamp: string // ISO string to avoid hydration mismatch
   cards?: ChatCard[]
   navigateTo?: ViewMode
+}
+
+// Format time from ISO string to avoid hydration mismatch
+function formatTime(isoString: string): string {
+  const match = isoString.match(/T(\d{2}):(\d{2})/)
+  if (match) {
+    return `${match[1]}:${match[2]}`
+  }
+  return "--:--"
 }
 
 interface ChatCard {
@@ -39,7 +48,7 @@ const initialMessages: ChatMessage[] = [
       "- 競合監視: オートプラザ新宿+8%増を検出\n\n" +
       "【承認キュー: 8件】\n" +
       "緊急: アルファード入札(STR1位)、滞留在庫8台の処分判断",
-    timestamp: new Date("2026-03-03T09:00:00Z"),
+    timestamp: "2026-03-03T09:00:00Z",
   },
 ]
 
@@ -162,7 +171,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
       id: `u-${Date.now()}`,
       role: "user",
       content: message,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     }
     setMessages((prev) => [...prev, userMsg])
     setInput("")
@@ -174,7 +183,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
         id: `b-${Date.now()}`,
         role: "assistant",
         content: response.content,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
         cards: response.cards,
         navigateTo: response.navigateTo,
       }
@@ -205,7 +214,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
           role: "assistant",
           content:
             "登録を受け付けました。各エージェントがバックグラウンドで処理を開始します。\n\n- 価格算定エージェント: 市場調査を開始\n- 仕入エージェント: オークション監視に追加\n- 顧客マッチングエージェント: マッチング候補を自動検索\n\n処理完了時に承認キューで結果をお伝えします。",
-          timestamp: new Date(),
+          timestamp: new Date().toISOString(),
         }
         setMessages((prev) => [...prev, botMsg])
         setIsTyping(false)
@@ -259,10 +268,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
                       msg.role === "assistant" ? "text-muted-foreground" : "text-primary-foreground/60"
                     )}
                   >
-                    {msg.timestamp.toLocaleTimeString("ja-JP", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatTime(msg.timestamp)}
                   </p>
                 </div>
               </div>

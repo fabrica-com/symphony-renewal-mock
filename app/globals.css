@@ -4,8 +4,51 @@
 @custom-variant dark (&:is(.dark *));
 
 /* Symphony - AI-native used car management system
-   Dark, sophisticated automotive feel with teal accent */
+   Teal accent with light/dark mode support */
+
+/* Light mode (default) */
 :root {
+  --background: oklch(0.98 0.005 260);
+  --foreground: oklch(0.15 0.01 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.01 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.01 260);
+  --primary: oklch(0.55 0.18 175);
+  --primary-foreground: oklch(0.98 0.005 260);
+  --secondary: oklch(0.95 0.005 260);
+  --secondary-foreground: oklch(0.25 0.01 260);
+  --muted: oklch(0.95 0.005 260);
+  --muted-foreground: oklch(0.45 0.01 260);
+  --accent: oklch(0.55 0.18 175);
+  --accent-foreground: oklch(0.98 0.005 260);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0.005 260);
+  --border: oklch(0.90 0.005 260);
+  --input: oklch(0.95 0.005 260);
+  --ring: oklch(0.55 0.18 175);
+  --chart-1: oklch(0.55 0.18 175);
+  --chart-2: oklch(0.50 0.15 200);
+  --chart-3: oklch(0.45 0.12 230);
+  --chart-4: oklch(0.70 0.15 90);
+  --chart-5: oklch(0.50 0.18 300);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.97 0.005 260);
+  --sidebar-foreground: oklch(0.15 0.01 260);
+  --sidebar-primary: oklch(0.55 0.18 175);
+  --sidebar-primary-foreground: oklch(0.98 0.005 260);
+  --sidebar-accent: oklch(0.93 0.005 260);
+  --sidebar-accent-foreground: oklch(0.15 0.01 260);
+  --sidebar-border: oklch(0.90 0.005 260);
+  --sidebar-ring: oklch(0.55 0.18 175);
+  --success: oklch(0.55 0.20 150);
+  --success-foreground: oklch(0.98 0.005 260);
+  --warning: oklch(0.70 0.18 80);
+  --warning-foreground: oklch(0.15 0.01 260);
+}
+
+/* Dark mode */
+.dark {
   --background: oklch(0.13 0.005 260);
   --foreground: oklch(0.95 0.01 260);
   --card: oklch(0.16 0.005 260);
@@ -30,7 +73,6 @@
   --chart-3: oklch(0.65 0.10 230);
   --chart-4: oklch(0.80 0.12 90);
   --chart-5: oklch(0.60 0.15 300);
-  --radius: 0.625rem;
   --sidebar: oklch(0.11 0.005 260);
   --sidebar-foreground: oklch(0.95 0.01 260);
   --sidebar-primary: oklch(0.75 0.15 175);
