@@ -15,17 +15,15 @@ interface ChatMessage {
   navigateTo?: ViewMode
 }
 
-// Format time from ISO string - uses local time for display
-function formatTime(isoString: string, mounted: boolean): string {
-  if (!mounted) return "" // Return empty on server to avoid mismatch
-  try {
-    const date = new Date(isoString)
-    const hours = date.getHours().toString().padStart(2, "0")
-    const minutes = date.getMinutes().toString().padStart(2, "0")
-    return `${hours}:${minutes}`
-  } catch {
-    return "--:--"
+// Format time - extract directly from ISO string to avoid timezone issues
+function formatTime(isoString: string): string {
+  // For initial messages with fixed timestamps, extract time directly from ISO string
+  // This ensures server and client render the same value
+  const match = isoString.match(/T(\d{2}):(\d{2})/)
+  if (match) {
+    return `${match[1]}:${match[2]}`
   }
+  return "--:--"
 }
 
 interface ChatCard {
@@ -46,10 +44,11 @@ const initialMessages: ChatMessage[] = [
       "- 価格アラート: 高価格2 / 適正5 / 低価格1\n" +
       "- 全国ランキング: 20位/21店 - 改善余地あり\n" +
       "- STR上位: アルファード(28.5%) / ヴェゼル(24.2%)\n\n" +
-      "【稼働中エージェント: 12体】\n" +
-      "- AA相場: STR上位車種をUSS東京でスキャン中\n" +
+      "【稼働中エージェント: 13体】\n" +
+      "- 業販相場: STR上位車種を業販市場でスキャン中\n" +
       "- 価格調整: Insight価格アラートと連携完了\n" +
-      "- 競合監視: オートプラザ新宿+8%増を検出\n\n" +
+      "- 競合店リサーチ: オートプラザ新宿+8%増を検出\n" +
+      "- 口コミ監視: 各プラットフォームの新規口コミを監視中\n\n" +
       "【承認キュー: 8件】\n" +
       "緊急: アルファード入札(STR1位)、滞留在庫8台の処分判断",
     timestamp: "2026-03-03T09:00:00Z",
@@ -152,14 +151,8 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  
-  // Prevent hydration mismatch for time display
-  useEffect(() => {
-    setMounted(true)
-  }, [])
   
   useEffect(() => {
   if (scrollRef.current) {
@@ -279,7 +272,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
                     )}
                     suppressHydrationWarning
                   >
-                    {formatTime(msg.timestamp, mounted)}
+                    {formatTime(msg.timestamp)}
                   </p>
                 </div>
               </div>
