@@ -10,9 +10,20 @@ interface ChatMessage {
   id: string
   role: "user" | "assistant"
   content: string
-  timestamp: Date
+  timestamp: string // ISO string to avoid hydration mismatch
   cards?: ChatCard[]
   navigateTo?: ViewMode
+}
+
+// Format time - extract directly from ISO string to avoid timezone issues
+function formatTime(isoString: string): string {
+  // For initial messages with fixed timestamps, extract time directly from ISO string
+  // This ensures server and client render the same value
+  const match = isoString.match(/T(\d{2}):(\d{2})/)
+  if (match) {
+    return `${match[1]}:${match[2]}`
+  }
+  return "--:--"
 }
 
 interface ChatCard {
@@ -27,8 +38,20 @@ const initialMessages: ChatMessage[] = [
     id: "sys-1",
     role: "assistant",
     content:
-      "おはようございます。本日の状況をお伝えします。\n\n5つのエージェントが稼働中です。承認キューに5件の依頼があります。\n\nUSS東京で BMW 320i M Sport のオークションが45分後に開始されます。3名の顧客希望と合致しており、入札承認をお待ちしています。\n\n車両・顧客の新規登録は各タブの「データ取込」ボタンから生素材（写真・書類・音声）を投入してください。AIが構造化し、確認を求めます。",
-    timestamp: new Date("2026-03-03T09:00:00Z"),
+      "おはようございます。Symphony Insightと連携した本日の状況です。\n\n" +
+      "【Insight分析サマリー】\n" +
+      "- 在庫健全性: 90日超が9%（8台）- 要対策\n" +
+      "- 価格アラート: 高価格2 / 適正5 / 低価格1\n" +
+      "- 全国ランキング: 20位/21店 - 改善余地あり\n" +
+      "- STR上位: アルファード(28.5%) / ヴェゼル(24.2%)\n\n" +
+      "【稼働中エージェント: 13体】\n" +
+      "- 業販相場: STR上位車種を業販市場でスキャン中\n" +
+      "- 価格調整: Insight価格アラートと連携完了\n" +
+      "- 競合店リサーチ: オートプラザ新宿+8%増を検出\n" +
+      "- 口コミ監視: 各プラットフォームの新規口コミを監視中\n\n" +
+      "【承認キュー: 8件】\n" +
+      "緊急: アルファード入札(STR1位)、滞留在庫8台の処分判断",
+    timestamp: "2026-03-03T09:00:00Z",
   },
 ]
 
@@ -95,17 +118,26 @@ function getSimulatedResponse(message: string): { content: string; cards?: ChatC
   }
 
   // Report
-  if (message.includes("レポート") || message.includes("売上") || message.includes("今日")) {
+  if (message.includes("レポート") || message.includes("売上") || message.includes("今日") || message.includes("Insight") || message.includes("insight")) {
     return {
       content:
-        "本日の売上見込みは約580万円です。\n\n" +
-        "- 田中様（マツダ CX-5）: 成約確率 87% / 280万円\n" +
-        "- 佐藤様（トヨタ アルファード）: 成約確率 72% / 598万円\n\n" +
-        "エージェント稼働状況:\n" +
-        "- 本日の処理タスク: 158件\n" +
-        "- トークン消費: 707K / 2,150K（33%）\n" +
-        "- 自動処理率: 94.2%（前月比 +2.1%）\n\n" +
-        "全エージェントが正常稼働中です。",
+        "【Symphony Insight連携レポート】\n\n" +
+        "■ 本日の売上見込み: 約669万円（Insight月間売上連動）\n" +
+        "- 田中様（CX-5）: 87% / 280万円\n" +
+        "- 佐藤様（アルファード）: 72% / 598万円\n\n" +
+        "■ Insight KPI\n" +
+        "- 在庫: 89台 / 回転率: 6.3回/年 / 平均在庫日数: 49日\n" +
+        "- 在庫健全性: 30日以内40台 / 31-60日26台 / 61-90日13台 / 90日超8台\n" +
+        "- 全国ランキング: 20位/21店（要改善）\n\n" +
+        "■ STRランキングTOP5（東京都内）\n" +
+        "1. アルファード 28.5% +8.3%\n" +
+        "2. ヴェゼル 24.2% +5.1%\n" +
+        "3. ハリアー 22.8% +3.2%\n" +
+        "4. セレナ 21.5% +2.8%\n" +
+        "5. CX-5 19.3% +1.5%\n\n" +
+        "■ 競合動向\n" +
+        "- オートプラザ新宿: 312台（+8%）\n" +
+        "- カーセレクト渋谷: 278台（-3%）",
     }
   }
 
@@ -121,11 +153,11 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
   const [isTyping, setIsTyping] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-
+  
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
+  if (scrollRef.current) {
+  scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }
   }, [messages, isTyping])
 
   const handleSend = (text?: string, navigateDirectly?: ViewMode) => {
@@ -142,7 +174,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
       id: `u-${Date.now()}`,
       role: "user",
       content: message,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     }
     setMessages((prev) => [...prev, userMsg])
     setInput("")
@@ -154,7 +186,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
         id: `b-${Date.now()}`,
         role: "assistant",
         content: response.content,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
         cards: response.cards,
         navigateTo: response.navigateTo,
       }
@@ -185,7 +217,7 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
           role: "assistant",
           content:
             "登録を受け付けました。各エージェントがバックグラウンドで処理を開始します。\n\n- 価格算定エージェント: 市場調査を開始\n- 仕入エージェント: オークション監視に追加\n- 顧客マッチングエージェント: マッチング候補を自動検索\n\n処理完了時に承認キューで結果をお伝えします。",
-          timestamp: new Date(),
+          timestamp: new Date().toISOString(),
         }
         setMessages((prev) => [...prev, botMsg])
         setIsTyping(false)
@@ -238,11 +270,9 @@ export function CommandChat({ onNavigate }: { onNavigate?: (view: ViewMode) => v
                       "mt-1.5 text-[10px]",
                       msg.role === "assistant" ? "text-muted-foreground" : "text-primary-foreground/60"
                     )}
+                    suppressHydrationWarning
                   >
-                    {msg.timestamp.toLocaleTimeString("ja-JP", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatTime(msg.timestamp)}
                   </p>
                 </div>
               </div>

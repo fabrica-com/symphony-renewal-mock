@@ -2,25 +2,52 @@ export type AgentStatus = "active" | "idle" | "waiting" | "error"
 export type ApprovalStatus = "pending" | "approved" | "rejected"
 export type Priority = "high" | "medium" | "low"
 
+// Business phases for agent organization
+export type BusinessPhase = 
+  | "purchasing"      // 仕入れ
+  | "inventory"       // 在庫管理・価格設定
+  | "marketing"       // 集客
+  | "sales"           // 接客・商談
+  | "contract"        // 成約・納車
+  | "aftersales"      // アフターフォロー
+
+export type AgentSchedule = "realtime" | "daily" | "weekly" | "monthly" | "on-demand"
+
 export interface Agent {
   id: string
   name: string
   nameJa: string
   role: string
   roleJa: string
+  phase: BusinessPhase
+  phaseJa: string
+  schedule: AgentSchedule
+  scheduleJa: string
   status: AgentStatus
   currentTask: string
   currentTaskJa: string
   completedToday: number
   tokenUsage: number
   tokenBudget: number
+  skills?: string[]
 }
 
 export interface ApprovalItem {
   id: string
   agentId: string
   agentName: string
-  type: "pricing" | "purchase" | "listing" | "customer" | "inspection" | "transfer"
+  type: 
+    | "pricing"         // 価格調整
+    | "purchase"        // 仕入承認
+    | "listing"         // 出品承認
+    | "customer"        // 顧客アプローチ
+    | "inspection"      // 検査結果
+    | "transfer"        // 業販・AA出品
+    | "sns-post"        // SNS投稿
+    | "inquiry-reply"   // 問い合わせ返信
+    | "follow-up"       // フォローアップ
+    | "review-reply"    // 口コミ返信
+    | "contract"        // 契約書
   typeJa: string
   title: string
   titleJa: string
@@ -103,4 +130,36 @@ export interface KPI {
   trend: "up" | "down" | "flat"
 }
 
-export type ViewMode = "command" | "inventory" | "customers"
+export type ViewMode = "command" | "inventory" | "customers" | "calendar"
+
+// Calendar event types for Google Calendar integration
+export type CalendarEventType = 
+  | "delivery"     // 納車
+  | "negotiation"  // 商談
+  | "auction"      // オークション
+  | "inspection"   // 検査・入庫
+  | "loaner"       // 代車・レンタカー
+  | "follow-up"    // フォローアップ
+  | "shaken"       // 車検
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  type: CalendarEventType
+  typeJa: string
+  date: string        // ISO date string YYYY-MM-DD
+  startTime: string   // HH:MM format
+  endTime: string     // HH:MM format
+  location?: string
+  customerId?: string
+  customerName?: string
+  vehicleId?: string
+  vehicleName?: string
+  agentId?: string
+  agentName?: string
+  status: "scheduled" | "confirmed" | "completed" | "cancelled"
+  statusJa: string
+  notes?: string
+  googleCalendarId?: string  // For sync with Google Calendar
+  color?: string  // Event color for calendar display
+}

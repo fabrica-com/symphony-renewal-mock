@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import type { ActivityEvent } from "@/lib/types"
 import { CheckCircle2, Info, AlertTriangle, XCircle } from "lucide-react"
@@ -30,9 +31,15 @@ const statusConfig: Record<
   },
 }
 
-function formatTime(dateStr: string) {
-  const d = new Date(dateStr)
-  return d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })
+// Extract hours and minutes directly from ISO string to avoid hydration mismatch
+// ISO format: "2026-03-03T09:18:00Z" - extract "09:18" directly
+function formatTimeFromISO(dateStr: string) {
+  // Parse directly from ISO string without Date object to avoid timezone issues
+  const match = dateStr.match(/T(\d{2}):(\d{2})/)
+  if (match) {
+    return `${match[1]}:${match[2]}`
+  }
+  return "--:--"
 }
 
 export function ActivityFeed({ events }: { events: ActivityEvent[] }) {
@@ -69,7 +76,7 @@ export function ActivityFeed({ events }: { events: ActivityEvent[] }) {
                     {event.agentName}
                   </span>
                   <span className="text-[10px] tabular-nums text-muted-foreground">
-                    {formatTime(event.timestamp)}
+                    {formatTimeFromISO(event.timestamp)}
                   </span>
                 </div>
                 <p className="text-xs text-foreground/80">{event.actionJa}</p>

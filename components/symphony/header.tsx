@@ -1,6 +1,7 @@
 "use client"
 
-import { Bell, Settings, Activity, LayoutDashboard, Car, Users } from "lucide-react"
+import { Bell, Settings, Activity, LayoutDashboard, Car, Users, Calendar, Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -15,10 +16,13 @@ export function Header({
   currentView: ViewMode
   onViewChange: (view: ViewMode) => void
 }) {
+  const { theme, setTheme } = useTheme()
+
   const navItems: { view: ViewMode; label: string; icon: React.ReactNode }[] = [
     { view: "command", label: "コマンドセンター", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
     { view: "inventory", label: "在庫一覧", icon: <Car className="h-3.5 w-3.5" /> },
     { view: "customers", label: "顧客一覧", icon: <Users className="h-3.5 w-3.5" /> },
+    { view: "calendar", label: "スケジュール", icon: <Calendar className="h-3.5 w-3.5" /> },
   ]
 
   return (
@@ -57,6 +61,16 @@ export function Header({
         </nav>
       </div>
       <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
+          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <span className="sr-only">テーマ切替</span>
+        </Button>
         <Button variant="ghost" size="sm" className="relative h-9 w-9 p-0 text-muted-foreground hover:text-foreground">
           <Bell className="h-4 w-4" />
           {pendingCount > 0 && (

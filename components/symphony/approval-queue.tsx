@@ -16,6 +16,10 @@ import {
   Truck,
   Clock,
   AlertTriangle,
+  Instagram,
+  MessageSquare,
+  Heart,
+  Star,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -27,6 +31,11 @@ const typeIcon: Record<string, React.ReactNode> = {
   customer: <Users className="h-4 w-4" />,
   inspection: <Search className="h-4 w-4" />,
   transfer: <Truck className="h-4 w-4" />,
+  "sns-post": <Instagram className="h-4 w-4" />,
+  "inquiry-reply": <MessageSquare className="h-4 w-4" />,
+  "follow-up": <Heart className="h-4 w-4" />,
+  "review-reply": <Star className="h-4 w-4" />,
+  contract: <FileText className="h-4 w-4" />,
 }
 
 const priorityConfig: Record<string, { label: string; className: string }> = {
